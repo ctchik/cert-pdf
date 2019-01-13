@@ -32,7 +32,9 @@ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 
 3. For details of parameters, please refer to `cert_pdf/api.py`
 
-4. **NOTICE THAT (1) THE BITCOIN TESTNET ACCOUNT USED IS ONLY FOR TEST. PLEASE MODIFY IT TO YOUR OWN'S. (2) THE PATHS OF IMAGES IN DIFFERENT OS MAY DIFFER, PLEASE MODIFY IT IN `configuration/cert_issuer_conf.ini` (IN `IMAGES` SECTION AND `issuer_signature_lines`).**
+4. **NOTICE THAT THE BITCOIN TESTNET ACCOUNT USED IS ONLY FOR TEST. PLEASE MODIFY IT TO YOUR OWN'S.**
+
+5. **THE PATHS OF IMAGES IN DIFFERENT OS MAY DIFFER, PLEASE MODIFY IT IN `configuration/cert_issuer_conf.ini` (IN `IMAGES` SECTION AND `issuer_signature_lines`).**
 
 ### Verify an Certificate
 
