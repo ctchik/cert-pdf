@@ -1,15 +1,18 @@
+import os
 import json
 import base64
 
 import issuer_helpers
 import verify_helpers
 
+dirname = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0]
+
 # Paths below can be modified, which is just for testing
 
-pdf_import_path = '../PDFs'
-json_export_path = '../configuration/blockcert_certificates'
-tools_conf = '../configuration/cert_tools_conf.ini'
-issuer_conf = '../configuration/cert_issuer_conf.ini'
+pdf_import_path = os.path.join(dirname, 'PDFs')
+json_export_path = os.path.join(dirname, 'configuration', 'blockcert_certificates')
+tools_conf = os.path.join(dirname, 'configuration', 'cert_tools_conf.ini')
+issuer_conf = os.path.join(dirname, 'configuration', 'cert_issuer_conf.ini')
 
 # Test public key
 
@@ -23,21 +26,33 @@ pubkey_list = ['mubib9QNSNfBZkphQb3cCXG6giGKzA9k3X']
 # name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
 #               PLAESE DON'T include '.pdf' in namePattern
 
-def issue_batch(import_path, export_path, summary_path, name_pattern = '|DOCID|-|NAME|'):
+def issue_batch(import_path, export_path, summary_path, name_pattern = '|DOCID|__|NAME|'):
+
+    print('\n[INFO] Modifying configuration files ...')
+    issuer_helpers.modify_conf()
 
     print('\n[INFO] Creating roster file ...')
-    list_DOCID = issuer_helpers.create_roster(import_path, name_pattern)
+    list_DOCID, file_count = issuer_helpers.create_roster(import_path, name_pattern)
+
+    if file_count == 0:
+        print('\n[INFO] There is no valid PDF file found, the process will terminate.\n')
+        return
+
     print('\n[INFO] Clearing the working directories ...')
     issuer_helpers.clear()
+
     print('\n[INFO] Creating certificate templates ...')
     issuer_helpers.create_template()
+
     print('\n[INFO] Instantiating certificates ...')
     issuer_helpers.create_certificates()
+
     print('\n[INFO] Issuing certificates ...')
-    issuer_helpers.modify_ini(issuer_conf, 'ISSUERCONF', 'blockchain_certificates_dir', export_path)
     issuer_helpers.issue_certificates(export_path)
+
     print('\n[INFO] Generating summary file ...')
     issuer_helpers.generate_summary(export_path, summary_path, list_DOCID)
+
     print('\n[INFO] All steps finished.\n')
 
 # FUNCTION verify_cert - Verify whether a cert
