@@ -26,7 +26,7 @@ pubkey_list = ['mubib9QNSNfBZkphQb3cCXG6giGKzA9k3X']
 # name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
 #               PLAESE DON'T include '.pdf' in namePattern
 
-def issue_batch(import_path, export_path, summary_path, name_pattern = '|DOCID|__|NAME|'):
+def issue_batch(import_path, export_path, summary_path, name_pattern = '|DOCID|-|NAME|'):
 
     print('\n[INFO] Modifying configuration files ...')
     issuer_helpers.modify_conf()
