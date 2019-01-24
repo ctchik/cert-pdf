@@ -15,7 +15,11 @@ import requests
 import configparser
 import tqdm
 
+from blockcypher_token_helpers import get_token
+
 from path_helpers import *
+
+import blockcypher_token_helpers
 
 from cert_tools import create_v2_certificate_template as tpl
 from cert_tools import instantiate_v2_certificate_batch as ist
@@ -23,9 +27,10 @@ from cert_tools import instantiate_v2_certificate_batch as ist
 from cert_issuer import issue_certificates as isu
 from cert_issuer import config
 
-def start(token):
+def start(token, export_path):
     global TOKEN
     TOKEN = token
+    os.makedirs(export_path, exist_ok = True)
     os.makedirs(get_summary_dir(), exist_ok = True)
     os.makedirs(get_work_dir(TOKEN), exist_ok = True)
     os.makedirs(get_unsigned_cert_dir(TOKEN), exist_ok = True)
@@ -46,9 +51,12 @@ def modify_conf(pubkey, psw_file):
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'unsigned_certificates_dir', get_unsigned_cert_dir(TOKEN))
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'blockchain_certificates_dir', get_signed_cert_dir(TOKEN))
        
-def clear():
-    shutil.rmtree(get_conf_dir(TOKEN))
-
+def clear(clear_all = False):
+    if clear_all:
+        shutil.rmtree(STAGE_DIR, ignore_errors = True)
+    else:
+        shutil.rmtree(get_conf_dir(TOKEN))
+    
 def getBase64(filename):
     file = open(filename, 'rb')
     file_read = file.read()
@@ -130,17 +138,32 @@ def issue_certificates(pubkey):
     tx_id = ''
     successful = False
     latest_transaction = file.readline()
+    chain_latest = ''
 
     count = 0
 
     logging.info('Waiting the latest transaction to be confirmed ...')
+
     while get_confirmation(latest_transaction) == 0:
-        time.sleep(10)
+        time.sleep(60)
         count += 1
-        if count >= 99999: # timeout
+        if count >= 60: # timeout = 60 min
             raise Exception('Waiting timeout.')
 
-    if get_latest_transaction(pubkey) in latest_transaction:
+    count = 0
+
+    while True:
+        count += 1
+        chain_latest = get_latest_transaction(pubkey)
+        if chain_latest != 'retry':
+            break
+        time.sleep(60)
+        if count >= 60:
+            raise Exception('Waiting timeout.')
+
+    logging.info('Passed')
+
+    if chain_latest in latest_transaction:
         logging.info('Latest transaction authenticity check passed ...')
         try:
             parsed_config = config.get_config(get_issuer_conf_dir(TOKEN))
@@ -167,9 +190,11 @@ def get_latest_transaction(pubkey):
         url = 'https://api.blockcypher.com/v1/btc/test3/addrs/'
     else:
         url = 'https://api.blockcypher.com/v1/btc/main/addrs/'
-    user_data = requests.get(url + pubkey).json()
+    user_data = requests.get(url + pubkey + '?token=' + get_token()).json()
     if 'error' in user_data:
-        raise Exception(user_data['error'])
+        logging.error(user_data['error'])
+        logging.info('Will retry after 60 secs ...')
+        return 'retry'
     return user_data['txrefs'][0]['tx_hash']
 
 def get_confirmation(tx_id):
@@ -178,17 +203,20 @@ def get_confirmation(tx_id):
         url = 'https://api.blockcypher.com/v1/btc/test3/txs/'
     else:
         url = 'https://api.blockcypher.com/v1/btc/main/txs/'
-    transaction_data = requests.get(url + tx_id).json()
+    transaction_data = requests.get(url + tx_id + '?token=' + get_token()).json()
     if 'error' in transaction_data:
-        raise Exception(transaction_data['error'])
+        logging.error(transaction_data['error'])
+        logging.info('Will retry after 60 secs ...')
+        return 0
     return transaction_data['confirmations']
 
 def wait(tx_id):
-    timeout = 99999 # in sec
+    timeout = 60 # in sec
     for i in range(timeout):
-        time.sleep(10)
         if get_confirmation(tx_id) > 0:
+            logging.info('Passed')
             return
+        time.sleep(60)
     raise Exception('Waiting timeout.')
 
 def generate_summary(export_path):

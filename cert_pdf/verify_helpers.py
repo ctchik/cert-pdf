@@ -3,6 +3,8 @@ import requests
 
 from cert_verifier import verifier
 
+from blockcypher_token_helpers import get_token
+
 # FUNCTION check_confirmation_and_issuer - Check whether the transaction is confirmed 
 #                                          and whether the cert is issued by issuer in pubkey_list
 
@@ -23,7 +25,7 @@ def check_confirmation_and_issuer(cert_path, pubkey_list):
             print('Error - This certificate belongs to neither testnet or mainnet of bitcoin.')
             return
 
-        transaction_data = requests.get(url + tx_id).json()
+        transaction_data = requests.get(url + tx_id + '?token=' + get_token()).json()
 
         try:
             ret['transaction is confirmed'] = transaction_data['confirmations'] > 0
