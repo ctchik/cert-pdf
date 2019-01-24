@@ -95,3 +95,5 @@ venv*/
 .idea/*
 
 .DS_Store
+
+*.pdf
