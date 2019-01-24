@@ -1,14 +1,21 @@
+import io
 import os
 import re
 import csv
 import sys
 import glob
+import time
 import json
+import fcntl
 import base64
 import shutil
 import hashlib
 import logging
+import requests
 import configparser
+import tqdm
+
+from path_helpers import *
 
 from cert_tools import create_v2_certificate_template as tpl
 from cert_tools import instantiate_v2_certificate_batch as ist
@@ -16,118 +23,191 @@ from cert_tools import instantiate_v2_certificate_batch as ist
 from cert_issuer import issue_certificates as isu
 from cert_issuer import config
 
-dirname = os.path.split(os.path.split(os.path.abspath(__file__))[0])[0]
-conf_dir = os.path.join(dirname, 'configuration')
-unsigned_cert_dir = os.path.join(conf_dir, 'unsigned_certificates')
-templates_dir = os.path.join(conf_dir, 'templates')
-roster_dir = os.path.join(conf_dir, 'roster', 'roster.csv')
-issuer_conf_dir = os.path.join(conf_dir, 'cert_issuer_conf.ini')
-tools_conf_dir = os.path.join(conf_dir, 'cert_tools_conf.ini')
-work_dir = os.path.join(conf_dir, 'work')
+def start(token):
+    global TOKEN
+    TOKEN = token
+    os.makedirs(get_summary_dir(), exist_ok = True)
+    os.makedirs(get_work_dir(TOKEN), exist_ok = True)
+    os.makedirs(get_unsigned_cert_dir(TOKEN), exist_ok = True)
+    os.makedirs(get_template_dir(TOKEN), exist_ok = True)
+    os.makedirs(get_roster_dir(TOKEN), exist_ok = True)
+    os.makedirs(get_signed_cert_dir(TOKEN), exist_ok = True)
+    shutil.copyfile(get_tools_conf_template_dir(), get_tools_conf_dir(TOKEN))
+    shutil.copyfile(get_issuer_conf_template_dir(), get_issuer_conf_dir(TOKEN))
+    shutil.copytree(get_image_template_dir(), get_image_dir(TOKEN))
 
-# clean the temp dir
-
+def modify_conf(pubkey, psw_file):
+    psw_file = os.path.abspath(psw_file)
+    modify_ini(get_tools_conf_dir(TOKEN), 'TEMPLATE', 'data_dir', get_conf_dir(TOKEN))
+    modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'usb_name', os.path.split(psw_file)[0])
+    modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'key_file', os.path.split(psw_file)[1])
+    modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'issuing_address', pubkey)
+    modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'work_dir', get_work_dir(TOKEN))
+    modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'unsigned_certificates_dir', get_unsigned_cert_dir(TOKEN))
+    modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'blockchain_certificates_dir', get_signed_cert_dir(TOKEN))
+       
 def clear():
-    shutil.rmtree(unsigned_cert_dir)
-    shutil.rmtree(templates_dir)
-    os.makedirs(unsigned_cert_dir)
-    os.makedirs(templates_dir)
+    shutil.rmtree(get_conf_dir(TOKEN))
 
 def getBase64(filename):
     file = open(filename, 'rb')
     file_read = file.read()
     file_encode = base64.encodebytes(file_read).decode('utf-8')
     return file_encode
-
-def modify_ini(ini_file, section, key, new_value):
-    config = configparser.RawConfigParser(allow_no_value = True)
-    config.optionxform = str
-    config.read(ini_file)
-    config.set(section, key, new_value)
-    with open(ini_file, "w") as output:
-        config.write(output)
-
-def modify_conf():
-    print(issuer_conf_dir)
-    modify_ini(tools_conf_dir, 'TEMPLATE', 'data_dir', conf_dir)
-    modify_ini(issuer_conf_dir, 'ISSUERINFO', 'usb_name', conf_dir)
-    modify_ini(issuer_conf_dir, 'ISSUERINFO', 'unsigned_certificates_dir', unsigned_cert_dir)
-    modify_ini(issuer_conf_dir, 'ISSUERINFO', 'work_dir', work_dir)
     
-def write_roster(list_NAME, list_DOCID, list_PDFinfo, export_file):
-    headers = ['name', 'pubkey', 'identity', 'PDFinfo']
+def write_roster(list_NAME, list_DOCID, list_FILENAME, list_PDFinfo, export_file):
+    headers = ['name', 'pubkey', 'identity', 'filename', 'pdfinfo']
     csvfile = open(export_file, 'w')
     writer = csv.DictWriter(csvfile, headers)
     writer.writeheader()
-    for i in range(0, len(list_NAME)):
-        writer.writerow({'name' : list_NAME[i],
-                         'pubkey': 'ecdsa-koblitz-pubkey:' + str(hashlib.sha256(b'dummy').hexdigest()),
-                         'identity' : list_DOCID[i], 
-                         'PDFinfo' : list_PDFinfo[i]})
+    
+    with tqdm.tqdm(total = len(list_NAME)) as bar:
+        for i in range(0, len(list_NAME)):
+            writer.writerow({'name' : list_NAME[i],
+                             'pubkey': 'ecdsa-koblitz-pubkey:' + str(hashlib.sha256(b'dummy').hexdigest()),
+                             'identity' : list_DOCID[i],
+                             'filename' : list_FILENAME[i],
+                             'pdfinfo' : list_PDFinfo[i]})
+            bar.update(1)
 
 def create_roster(import_path, name_pattern):
     re_DOCID = '(?P<DOCID>[0-9a-zA-Z]+)'
     re_NAME = '(?P<NAME>[a-zA-Z ]+)'
-    regex = name_pattern.replace('|DOCID|', re_DOCID).replace('|NAME|', re_NAME)
+    reg = name_pattern.replace('|DOCID|', re_DOCID).replace('|NAME|', re_NAME)
 
     list_NAME = []
     list_DOCID = []
+    list_FILENAME = []
     list_PDFinfo = []
     count = 0
 
-    for filename in glob.glob(os.path.join(import_path, '*.pdf')):
-        pr = filename.split('/')[-1] if '/' in filename else filename
-        if '.pdf' in pr:
-            pr = pr.replace('.pdf', '')
-        res = re.match(regex, pr)
-        if res:
-            list_NAME.append(res.group('NAME'))
-            list_DOCID.append(res.group('DOCID'))
-            list_PDFinfo.append(getBase64(filename))
-            count = count + 1
+    with tqdm.tqdm(total = len(glob.glob(os.path.join(import_path, '*.pdf')))) as bar:
+        for filename in glob.glob(os.path.join(import_path, '*.pdf')):
+            pr = os.path.split(filename)[1]
+            if '.pdf' in pr:
+                pr = pr.replace('.pdf', '')
+            rm = re.compile(reg)
+            res = rm.match(pr)
+            if res:
+                list_NAME.append(res.group('NAME'))
+                list_DOCID.append(res.group('DOCID'))
+                list_FILENAME.append(pr)
+                list_PDFinfo.append(getBase64(filename))
+                count = count + 1
+            bar.update(1)
 
-    write_roster(list_NAME, list_DOCID, list_PDFinfo, roster_dir)
+    write_roster(list_NAME, list_DOCID, list_FILENAME, list_PDFinfo, get_roster_file_dir(TOKEN))
 
-    return [list_DOCID, count]
+    return count
 
 def create_template():
-    conf = tpl.get_config(tools_conf_dir)
+    conf = tpl.get_config(get_tools_conf_dir(TOKEN))
     tpl.create_certificate_template(conf)
 
 def create_certificates():
-    conf = ist.get_config(tools_conf_dir)
+    conf = ist.get_config(get_tools_conf_dir(TOKEN))
     ist.create_unsigned_certificates_from_roster(conf)
 
-def issue_certificates(export_path):
-    modify_ini(issuer_conf_dir, 'ISSUERINFO', 'blockchain_certificates_dir', export_path)
-    try:
-        parsed_config = config.get_config(issuer_conf_dir)
-        tx_id = isu.main(parsed_config)
-        if tx_id:
-            logging.info('Transaction id is %s', tx_id)
-        else:
-            logging.error('Certificate issuing failed')
-            exit(1)
+def config_logger():
+    logging.basicConfig(filename = get_stage_log_dir(TOKEN), filemode = 'a', format = '[%(asctime)s] %(message)s', datefmt = '%Y-%m-%d %H:%M:%S')
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter("%(levelname)s - %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
 
-    except Exception as ex:
-        logging.error(ex, exc_info=True)
-        exit(1)
+def issue_certificates(pubkey):
+    config_logger()
 
-# only_generate_this_batch : whether the summary contains certificates which are not issued this time
+    print()
+    logging.info('Trying to acquire file lock ...')
+    file = open(get_latest_transaction_file_dir(), 'r+')
+    fcntl.flock(file.fileno(), fcntl.LOCK_EX)
+    logging.info('Lock acquired ...')
+    
+    tx_id = ''
+    successful = False
+    latest_transaction = file.readline()
 
-def generate_summary(cert_path, export_path, list_DOCID, only_generate_this_batch = True):
+    count = 0
+
+    logging.info('Waiting the latest transaction to be confirmed ...')
+    while get_confirmation(latest_transaction) == 0:
+        time.sleep(10)
+        count += 1
+        if count >= 99999: # timeout
+            raise Exception('Waiting timeout.')
+
+    if get_latest_transaction(pubkey) in latest_transaction:
+        logging.info('Latest transaction authenticity check passed ...')
+        try:
+            parsed_config = config.get_config(get_issuer_conf_dir(TOKEN))
+            tx_id = isu.main(parsed_config)
+            if tx_id:
+                logging.info('Transaction id is %s', tx_id)
+                file.seek(0)
+                file.write(tx_id)
+                successful = True
+            else:
+                logging.error('Certificate issuing failed')
+        except Exception as ex:
+            logging.error(ex, exc_info = True)
+            return [tx_id, successful]
+    else:
+        logging.error('Latest transaction authenticity check failed ... The public key is possibly stolen by someone else, please change a public key.')
+
+    file.close()
+    return [tx_id, successful]
+
+def get_latest_transaction(pubkey):
+    chain = read_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'chain')
+    if 'testnet' in chain:
+        url = 'https://api.blockcypher.com/v1/btc/test3/addrs/'
+    else:
+        url = 'https://api.blockcypher.com/v1/btc/main/addrs/'
+    user_data = requests.get(url + pubkey).json()
+    if 'error' in user_data:
+        raise Exception(user_data['error'])
+    return user_data['txrefs'][0]['tx_hash']
+
+def get_confirmation(tx_id):
+    chain = read_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'chain')
+    if 'testnet' in chain:
+        url = 'https://api.blockcypher.com/v1/btc/test3/txs/'
+    else:
+        url = 'https://api.blockcypher.com/v1/btc/main/txs/'
+    transaction_data = requests.get(url + tx_id).json()
+    if 'error' in transaction_data:
+        raise Exception(transaction_data['error'])
+    return transaction_data['confirmations']
+
+def wait(tx_id):
+    timeout = 99999 # in sec
+    for i in range(timeout):
+        time.sleep(10)
+        if get_confirmation(tx_id) > 0:
+            return
+    raise Exception('Waiting timeout.')
+
+def generate_summary(export_path):
     output = dict()
-    for filename in glob.glob(os.path.join(cert_path, '*.json')):
-        with open(filename, 'rb') as f:
-            data = json.load(f)
-            identity = data['recipient']['identity']
-            id = data['id']
-            issuedtime = data['issuedOn']
-            if identity in list_DOCID or not only_generate_this_batch:
+    with tqdm.tqdm(total = len(glob.glob(os.path.join(get_signed_cert_dir(TOKEN), '*.json'))) + 1) as bar:
+        for filename in glob.glob(os.path.join(get_signed_cert_dir(TOKEN), '*.json')):
+            with open(filename, 'rb') as f:
+                data = json.load(f)
+                identity = data['recipient']['identity']
+                id = data['id']
+                issuedtime = data['issuedOn']
                 usr = dict()
                 usr['cert_id'] = id
                 usr['issued_time'] = issuedtime
+                origin_filename = data['filename']
                 output[identity] = usr
-    with open(export_path, 'w') as f:
-        json.dump(output, f, indent = 4)
-    print('Summary has been written to ' + export_path)
+            shutil.copy(filename, os.path.join(export_path, origin_filename + '.json'))
+            bar.update(1)
+        with open(get_summary_file_dir(TOKEN), 'w') as f:
+            json.dump(output, f, indent = 4)
+        bar.update(1)
+    print('Summary has been written to ' + get_summary_file_dir(TOKEN))
