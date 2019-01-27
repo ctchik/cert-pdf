@@ -31,7 +31,7 @@ $ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 
 2. Will compare the local latest transaction and the online latest transaction before issuing a batch of PDF files. It prevents the occurrence of fake certificates when the private key is stolen by someone else. 
 
-3. Because of feature 2, when multiple callings are in process simultenously, only one calling can successfully get into the issuing phase. This feature is implemented by adding a file lock onto the local latest transaction file.
+3. Because of feature 2, when multiple callings are in process simultenously, only one calling can successfully get into the issuing phase. This feature is implemented by adding a file lock onto the local latest transaction file.
 
 4. Each calling will be assigned with a job ID, which is a uuid4. Job log of each calling will be produced. 
 
@@ -42,18 +42,27 @@ $ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 This configuration mimics the way that Emacs uses. Please first create a file named `.cert_pdf` under the `Home` directory (e.g., in Linux, please create `~/.cert_pdf`) with the content of the one in the repo.
 
 ```
-$ sudo cp cert-pdf/.cert_pdf ~/.cert_pdf
+$ sudo cp .cert_pdf ~/.cert_pdf
 ```
 
 By default, you don't need to modify the content of this file. If you use the default setting, all files related to cert-pdf will be stored in `root_dir`.
 
-### 2. Configure the `issuer_conf_template.ini` and `tools_conf_template.ini`
+### 2. Configure the `configuration/issuer_conf_template.ini` and `configuration/tools_conf_template.ini`
 
 Please don't modify any entry which says `[INTENDED TO BE BLANK]`. In `tools_conf_template.ini`, please remain the sections `IMAGES`, `TEMPLATE`, `INSATNTIATE` and `OTHER` unchanged.
 
+### 3. Move the 2 files to the working directory
+
+Here we assume that the `issuer_conf` and `tools_conf` in `.cert_pdf` are `templates/issuer_conf_template.ini` and `templates/tools_conf_template.ini` respectively, with `/Users/PPFish/pdf_cert_conf` as `root_dir`. Then run
+
+```
+$ sudo cp configuration/issuer_conf_template.ini /Users/PPFish/pdf_cert_conf/templates/issuer_conf_template.ini
+$ sudo cp configuration/tools_conf_template.ini /Users/PPFish/pdf_cert_conf/templates/tools_conf_template.ini
+``` 
+
 ## Usage
 
-### 1. Issue a Batch of PDF Files
+### 1. Issue a batch of PDF files
 
 ```
 python api.py issue --import_path IMPORT_PATH
@@ -86,7 +95,7 @@ Argument details:
       the formation of filename where |NAME| and |DOCID| are wildcards to match the corresponding info. PLAESE DON'T include '.pdf' in name_pattern. (default: '|DOCID|-|NAME|')
 ```
 
-### 2. Extract the PDF File inside a Certificate
+### 2. Extract the PDF file inside a certificate
 
 ```
 python api.py extract --cert_path CERT_PATH
@@ -101,7 +110,7 @@ Argument details:
       the export location of the PDF file
 ```
 
-### 3. Verify a Certificate
+### 3. Verify a certificate
 
 ```
 python api.py verify --cert_path CERT_PATH

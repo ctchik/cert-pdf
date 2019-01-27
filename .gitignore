@@ -97,6 +97,3 @@ venv*/
 .DS_Store
 
 *.pdf
-*.json
-psw_mainnet.txt
-psw_testnet.txt
