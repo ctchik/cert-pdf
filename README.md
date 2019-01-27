@@ -5,7 +5,7 @@ This is a variant of Blockcert which enables users to embed PDF files inside blo
 
 1. Please make sure that you have the recommended [python environment](https://github.com/blockchain-certificates/cert-issuer/blob/master/docs/virtualenv.md) to run the blockcert project.
 
-2. Install the **modified** blockcert module via following commands:
+2. Install the **modified** blockcert modules via following commands:
 
 ```
 git clone https://github.com/ppfish45/cert-tools.git && cd cert-tools && sudo pip install . && cd ../
@@ -19,6 +19,41 @@ git clone https://github.com/ppfish45/cert-verifier.git && cd cert-verifier && s
 git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 ```
 
+<<<<<<< HEAD
+=======
+4. Clone cert-pdf and enter the directory
+
+```
+$ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
+```
+
+## New Features
+
+1. The api supports concurrent calling. Each calling will create a staging folder where working files will be temporarily stored.
+
+2. Will compare the local latest transaction and the online latest transaction before issuing a batch of PDF files. It prevents the occurrence of fake certificates when the private key is stolen by someone else. 
+
+3. Because of feature 2, when multiple callings are in process simultenously, only one calling can successfully get into the issuing phase. This feature is implemented by adding a file lock onto the local latest transaction file.
+
+4. Each calling will be assigned with a job ID, which is a uuid4. Job log of each calling will be produced. 
+
+## Configuration
+
+### 1. Configure `.cert_pdf`
+
+This configuration mimics the way that Emacs uses. Please first create a file named `.cert_pdf` under the `Home` directory (e.g., in Linux, please create `~/.cert_pdf`) with the content of the one in the repo.
+
+```
+$ sudo cp cert-pdf/.cert_pdf ~/.cert_pdf
+```
+
+By default, you don't need to modify the content of this file. If you use the default setting, all files related to cert-pdf will be stored in `root_dir`.
+
+### 2. Configure the `issuer_conf_template.ini` and `tools_conf_template.ini`
+
+Please don't modify any entry which says `[INTENDED TO BE BLANK]`. In `tools_conf_template.ini`, please remain the sections `IMAGES`, `TEMPLATE`, `INSATNTIATE` and `OTHER` unchanged.
+
+>>>>>>> 5674a074693774558bc3afa5bf5b9172dac5286e
 ## Usage
 
 ### Issue a batch of PDF files
@@ -57,7 +92,11 @@ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 
 ### Extract the PDF File inside an Certificate
 
+<<<<<<< HEAD
 1. Import `cert_pdf/api.py` and run following code in python
   ``` 
   extract_pdf(cert_path, export_path)
   ```
+=======
+Information of transaction is provided by APIs of [btc.com](btc.com) (Bitcoin Mainnet) and [blockcypher.com](blockcypher.com) (Bitcoin Testnet).
+>>>>>>> 5674a074693774558bc3afa5bf5b9172dac5286e
