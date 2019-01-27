@@ -42,7 +42,7 @@ $ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 This configuration mimics the way that Emacs uses. Please first create a file named `.cert_pdf` under the `Home` directory (e.g., in Linux, please create `~/.cert_pdf`) with the content of the one in the repo.
 
 ```
-$ sudo cp cert-pdf/.cert_pdf ~/.cert_pdf
+$ sudo cp .cert_pdf ~/.cert_pdf
 ```
 
 By default, you don't need to modify the content of this file. If you use the default setting, all files related to cert-pdf will be stored in `root_dir`.
