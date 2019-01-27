@@ -24,9 +24,6 @@ stage_log = log/stage_log
 # Summary files folder
 summary_file = summary
 
-# The cache file of btc api
-api_cache = api_cache.txt
-
 # The file that LOCALLY stores the latest transaction made by the pubkey
 latest_transaction = latest_transaction.txt
 

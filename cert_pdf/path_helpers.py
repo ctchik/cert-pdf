@@ -20,9 +20,6 @@ INI_FILE = os.path.join(OS_ROOT, '.cert_pdf')
 ROOT_DIR = read_ini(INI_FILE, 'DIR', 'root_dir')
 STAGE_DIR = os.path.join(ROOT_DIR, read_ini(INI_FILE, 'DIR', 'stage_dir'))
 
-def get_api_cache_dir():
-    return os.path.join(ROOT_DIR, read_ini(INI_FILE, 'DIR', 'api_cache'))
-
 def get_latest_transaction_file_dir():
     return os.path.join(ROOT_DIR, read_ini(INI_FILE, 'DIR', 'latest_transaction'))
 
