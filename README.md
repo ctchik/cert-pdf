@@ -31,7 +31,7 @@ $ git clone https://github.com/ppfish45/cert-pdf.git && cd cert-pdf
 
 2. Will compare the local latest transaction and the online latest transaction before issuing a batch of PDF files. It prevents the occurrence of fake certificates when the private key is stolen by someone else. 
 
-3. Because of feature 2, when multiple callings are in process simultenously, only one calling can successfully get into the issuing phase. This feature is implemented by adding a file lock onto the local latest transaction file.
+3. Because of feature 2, when multiple callings are in process simultenously, only one calling can successfully get into the issuing phase. This feature is implemented by adding a file lock onto the local latest transaction file.
 
 4. Each calling will be assigned with a job ID, which is a uuid4. Job log of each calling will be produced. 
 
