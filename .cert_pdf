@@ -1,0 +1,38 @@
+[DIR]
+
+# All files will be stored in root_dir/...
+# Please use absolute path and not use '~'
+root_dir = /Users/PPFish/pdf_cert_conf
+
+# Each calling of API will generate a staging folder such as [root_dir]/[stage_dir]/...
+# where all the temporary files will be stored
+stage_dir = stages
+
+# The file where the unissued tasks are stored
+unissued_task_file = tasks/unissued.json
+
+# The file where the issued tasks are stored
+issued_task_file = tasks/issued.json
+
+# Log file of API callings
+api_log = log/main.log
+
+# Log folder of different stages
+stage_log = log/stage_log
+
+# Summary files folder
+summary_file = summary
+
+# The file that LOCALLY stores the latest transaction made by the pubkey
+latest_transaction = latest_transaction.txt
+
+# The cache file of btc api
+api_cache = api_cache.txt
+
+[TEMPLATE]
+
+# Only need to fill the necessary items in conf files
+# [root_dir]/[issuer_conf] and [root_dir]/[tools_conf]
+
+issuer_conf = templates/issuer_conf_template.ini
+tools_conf = templates/tools_conf_template.ini
