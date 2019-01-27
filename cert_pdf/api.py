@@ -73,6 +73,8 @@ def tmp_issue_certificates(pubkey):
 #
 # import_path - the directory where all PDFs are stored which need to be issued
 # export_path - the destination of the issued certs (json files)
+# pubkey - the public key (bitcoin address) used for this issuing
+# psw_file - the location of the file where the private key is stored
 # itsc - the itsc account of the user who raises this issuing
 # name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
 #               PLAESE DON'T include '.pdf' in namePattern
