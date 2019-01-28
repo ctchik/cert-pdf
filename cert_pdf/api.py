@@ -92,7 +92,6 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
     file_count = 0
     issue_ret = ['', '']
 
-    os.makedirs(os.path.split(path_helpers.get_api_log_dir())[0], exist_ok = True)
     os.makedirs(os.path.split(path_helpers.get_stage_log_dir(TOKEN))[0], exist_ok = True)
 
     JOB_LOG['id'] = TOKEN
@@ -190,6 +189,10 @@ def get_args(key, opts):
     return None
 
 signal.signal(signal.SIGINT, signal_handler)
+
+# Create log folder
+
+os.makedirs(os.path.split(path_helpers.get_api_log_dir())[0], exist_ok = True)
 
 # Handle the terminal args
 
