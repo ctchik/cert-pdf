@@ -2,8 +2,7 @@ import json
 import requests
 
 from cert_verifier import verifier
-
-from blockcypher_token_helpers import get_token
+from btc_api_helpers import *
 
 # FUNCTION check_confirmation_and_issuer - Check whether the transaction is confirmed 
 #                                          and whether the cert is issued by issuer in pubkey_list
@@ -15,25 +14,15 @@ def check_confirmation_and_issuer(cert_path, pubkey_list):
     with open(cert_path) as f:
         data = json.load(f)
         chain = data['signature']['anchors'][0]['chain']
-        tx_id = data['signature']['anchors'][0] ['sourceId']
+        tx_id = data['signature']['anchors'][0]['sourceId']
         
-        if chain == "bitcoinTestnet":
-            url = 'https://api.blockcypher.com/v1/btc/test3/txs/'
-        elif chain == 'bitcoinMainnet':
-            url = 'https://api.blockcypher.com/v1/btc/main/txs/'
-        else:
-            print('Error - This certificate belongs to neither testnet or mainnet of bitcoin.')
-            return
-
-        transaction_data = requests.get(url + tx_id + '?token=' + get_token()).json()
-
         try:
-            ret['transaction is confirmed'] = transaction_data['confirmations'] > 0
+            ret['transaction is confirmed'] = get_confirmation(tx_id, chain = chain) > 0
         except Exception as e:
             print(e)
             return
 
-        ret['issued by specific issuer'] = transaction_data['addresses'][0] in pubkey_list
+        ret['issued by specific issuer'] = get_address(tx_id, chain = chain) in pubkey_list
 
     return ret
 

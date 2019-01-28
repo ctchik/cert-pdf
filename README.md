@@ -68,9 +68,11 @@ Here we assume that the `image_dir` in `.cert_pdf` is `images`, with `/Users/PPF
 $ sudo cp -R configuration/images /Users/PPFish/pdf_cert_conf/images
 ```
 
+### 5. Leave the latest_transaction file blank to bypass the latest transaction check
+
 ## Usage
 
-### 1. Issue a batch of PDF files
+### Issue a batch of PDF files
 
 ```
 python api.py issue --import_path IMPORT_PATH
@@ -103,7 +105,7 @@ Argument details:
       the formation of filename where |NAME| and |DOCID| are wildcards to match the corresponding info. PLAESE DON'T include '.pdf' in name_pattern. (default: '|DOCID|-|NAME|')
 ```
 
-### 2. Extract the PDF file inside a certificate
+### Extract the PDF file inside a certificate
 
 ```
 python api.py extract --cert_path CERT_PATH
@@ -118,7 +120,7 @@ Argument details:
       the export location of the PDF file
 ```
 
-### 3. Verify a certificate
+### Verify a certificate
 
 ```
 python api.py verify --cert_path CERT_PATH
@@ -145,6 +147,12 @@ The return value of this function will be a json which tells the result of verif
   {'name': 'issuer authenticity', 'passed': True},
   {'name': '*OVERALL VALIDATION', 'passed': True}
 ]
+```
+
+### Clean cache directory
+
+```
+python api.py clean
 ```
 
 ## Acknowledgement

@@ -298,6 +298,9 @@ elif sys.argv[1] == 'verify':
 
     verify_cert(*params)
 
+elif sys.argv[1] == 'clean':
+    clear_cache()
+
 else:
     print('Unknown argument \'%s\'' % sys.argv[1])
 
