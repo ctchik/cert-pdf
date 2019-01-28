@@ -166,4 +166,4 @@ def request_sleep(TOKEN = None, chain = None):
     if 'testnet' in chain or 'Testnet' in chain:
         time.sleep(60)
     else:
-        time.sleep(30)
+        time.sleep(60)
