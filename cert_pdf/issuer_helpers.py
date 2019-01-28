@@ -151,6 +151,7 @@ def issue_certificates(pubkey):
     else:
         logging.info('Waiting the latest transaction to be confirmed ...')
         while get_confirmation(latest_transaction, TOKEN) == 0:
+            logging.info('No transaction yet. Will retry ...')
             count += 1
             if count >= 60: # timeout = 60 min
                 raise Exception('Waiting timeout.')
@@ -194,6 +195,7 @@ def wait(tx_id):
         if get_confirmation(tx_id, TOKEN) > 0:
             logging.info('Passed')
             return
+        logging.info('No transaction yet. Will retry ...')
         request_sleep(TOKEN)
     raise Exception('Waiting timeout.')
 
