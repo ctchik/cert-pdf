@@ -60,6 +60,14 @@ $ sudo cp configuration/issuer_conf_template.ini /Users/PPFish/pdf_cert_conf/tem
 $ sudo cp configuration/tools_conf_template.ini /Users/PPFish/pdf_cert_conf/templates/tools_conf_template.ini
 ``` 
 
+### 4. Move certificate images to the working directory
+
+Here we assume that the `image_dir` in `.cert_pdf` is `images`, with `/Users/PPFish/pdf_cert_conf` as `root_dir`. Then run
+
+```
+$ sudo cp -R configuration/images /Users/PPFish/pdf_cert_conf/images
+```
+
 ## Usage
 
 ### 1. Issue a batch of PDF files

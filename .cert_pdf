@@ -36,3 +36,5 @@ api_cache = api_cache.txt
 
 issuer_conf = templates/issuer_conf_template.ini
 tools_conf = templates/tools_conf_template.ini
+
+images_dir = images
