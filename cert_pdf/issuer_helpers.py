@@ -153,7 +153,8 @@ def issue_certificates(pubkey):
         while get_confirmation(latest_transaction, TOKEN) == 0:
             logging.info('No confirmation yet. Will retry ...')
             count += 1
-            if count >= 1000: # timeout = 60 min
+            if count >= 1000: # timeout
+                file.close()
                 raise Exception('Waiting timeout.')
             request_sleep(TOKEN)
         count = 0
@@ -163,6 +164,7 @@ def issue_certificates(pubkey):
             if chain_latest != 'retry':
                 break
             if count >= 1000:
+                file.close()
                 raise Exception('Waiting timeout.')
             request_sleep(TOKEN)
         logging.info('Passed')
@@ -180,23 +182,27 @@ def issue_certificates(pubkey):
                 successful = True
             else:
                 logging.error('Certificate issuing failed')
+                file.close()
         except Exception as ex:
             logging.error(ex, exc_info = True)
+            file.close()
             return [tx_id, successful]
     else:
         logging.error('Latest transaction authenticity check failed ... The public key is possibly stolen by someone else, please change a public key.')
+        file.close()
 
-    file.close()
-    return [tx_id, successful]
+    return [tx_id, successful, file]
 
-def wait(tx_id):
+def wait(tx_id, file):
     timeout = 1000 # in min
     for i in range(timeout):
         if get_confirmation(tx_id, TOKEN) > 0:
+            file.close()
             logging.info('Passed')
             return
         logging.info('No confirmation yet. Will retry ...')
         request_sleep(TOKEN)
+    file.close()
     raise Exception('Waiting timeout.')
 
 def generate_summary(export_path):

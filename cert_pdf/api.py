@@ -121,7 +121,7 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
     go_task(lambda: issuer_helpers.create_certificates(), 'Instantiating certificates')
     go_task(lambda: tmp_issue_certificates(pubkey), 'Issuing certificates')
     go_task(lambda: issuer_helpers.generate_summary(export_path), 'Generating summary file and moving issued certs into the destination folder')
-    go_task(lambda: issuer_helpers.wait(issue_ret[0]), 'Waiting the transaction to be confirmed')
+    go_task(lambda: issuer_helpers.wait(issue_ret[0], issue_ret[2]), 'Waiting the transaction to be confirmed')
     go_task(lambda: issuer_helpers.clear(), 'Cleaning working directory')
     
     insert_job_log('Job accomplished.', inc = True, replace = True)
