@@ -91,7 +91,7 @@ def get_latest_transaction(pubkey, TOKEN = None, chain = None):
             logging.error('URL request result: ' + str(user_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
-            return 0
+            return 'retry'
 
 def get_confirmation(tx_id, TOKEN = None, chain = None):    
     if TOKEN == None and chain == None:
