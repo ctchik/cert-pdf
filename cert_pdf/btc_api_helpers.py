@@ -35,7 +35,7 @@ def get_address(tx_id, TOKEN = None, chain = None):
                 return ''
             return td_json['inputs'][0]['addresses'][0]
         except Exception as e:
-            logging.error('URL request result: ' + transaction_data.content)
+            logging.error('URL request result: ' + str(transaction_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
@@ -49,7 +49,7 @@ def get_address(tx_id, TOKEN = None, chain = None):
                 return ''
             return td_json['data']['inputs'][0]['prev_addresses'][0]
         except Exception as e:
-            logging.error('URL request result: ' + transaction_data.content)
+            logging.error('URL request result: ' + str(transaction_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
@@ -74,7 +74,7 @@ def get_latest_transaction(pubkey, TOKEN = None, chain = None):
                 return 'retry'
             return ud_json['txrefs'][0]['tx_hash']
         except Exception as e:
-            logging.error('URL request result: ' + user_data.content)
+            logging.error('URL request result: ' + str(user_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
@@ -88,7 +88,7 @@ def get_latest_transaction(pubkey, TOKEN = None, chain = None):
                 return 'retry'
             return ud_json['data']['list'][0]['hash']
         except Exception as e:
-            logging.error('URL request result: ' + user_data.content)
+            logging.error('URL request result: ' + str(user_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
@@ -123,7 +123,7 @@ def get_confirmation(tx_id, TOKEN = None, chain = None):
                 return 0
             ret = td_json['confirmations']
         except Exception as e:
-            logging.error('URL request result: ' + transaction_data.content)
+            logging.error('URL request result: ' + str(transaction_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
@@ -137,7 +137,7 @@ def get_confirmation(tx_id, TOKEN = None, chain = None):
                 return 0
             ret = td_json['data']['confirmations']
         except Exception as e:
-            logging.error('URL request result: ' + transaction_data.content)
+            logging.error('URL request result: ' + str(transaction_data.content))
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
