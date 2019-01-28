@@ -56,6 +56,7 @@ Please don't modify any entry which says `[INTENDED TO BE BLANK]`. In `tools_con
 Here we assume that the `issuer_conf` and `tools_conf` in `.cert_pdf` are `templates/issuer_conf_template.ini` and `templates/tools_conf_template.ini` respectively, with `/Users/PPFish/pdf_cert_conf` as `root_dir`. Then run
 
 ```
+$ sudo mkdir -p /Users/PPFish/pdf_cert_conf/templates
 $ sudo cp configuration/issuer_conf_template.ini /Users/PPFish/pdf_cert_conf/templates/issuer_conf_template.ini
 $ sudo cp configuration/tools_conf_template.ini /Users/PPFish/pdf_cert_conf/templates/tools_conf_template.ini
 ``` 
@@ -68,7 +69,11 @@ Here we assume that the `image_dir` in `.cert_pdf` is `images`, with `/Users/PPF
 $ sudo cp -R configuration/images /Users/PPFish/pdf_cert_conf/images
 ```
 
-### 5. Leave the latest_transaction file blank to bypass the latest transaction check
+### 5. Create a blank latest_transaction file to bypass the latest transaction check
+
+```
+$ sudo touch /Users/PPFish/pdf_cert_conf/latest_transaction.txt
+```
 
 ## Usage
 
