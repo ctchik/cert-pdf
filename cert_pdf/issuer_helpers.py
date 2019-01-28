@@ -153,7 +153,7 @@ def issue_certificates(pubkey):
         while get_confirmation(latest_transaction, TOKEN) == 0:
             logging.info('No transaction yet. Will retry ...')
             count += 1
-            if count >= 60: # timeout = 60 min
+            if count >= 1000: # timeout = 60 min
                 raise Exception('Waiting timeout.')
             request_sleep(TOKEN)
         count = 0
@@ -162,7 +162,7 @@ def issue_certificates(pubkey):
             chain_latest = get_latest_transaction(pubkey, TOKEN)
             if chain_latest != 'retry':
                 break
-            if count >= 60:
+            if count >= 1000:
                 raise Exception('Waiting timeout.')
             request_sleep(TOKEN)
         logging.info('Passed')
@@ -190,7 +190,7 @@ def issue_certificates(pubkey):
     return [tx_id, successful]
 
 def wait(tx_id):
-    timeout = 60 # in min
+    timeout = 1000 # in min
     for i in range(timeout):
         if get_confirmation(tx_id, TOKEN) > 0:
             logging.info('Passed')

@@ -27,18 +27,32 @@ def get_address(tx_id, TOKEN = None, chain = None):
 
     if 'testnet' in chain or 'Testnet' in chain:
         url = 'https://api.blockcypher.com/v1/btc/test3/txs/' + tx_id + '?token=' + get_bcypher_token()
-        transaction_data = requests.get(url).json()
-        if 'error' in transaction_data:
-            logging.error(transaction_data['error'])
-            return ''
-        return transaction_data['inputs'][0]['addresses'][0]
+        try:
+            transaction_data = requests.get(url)
+            td_json = transaction_data.json()
+            if 'error' in td_json:
+                logging.error(td_json['error'])
+                return ''
+            return td_json['inputs'][0]['addresses'][0]
+        except Exception as e:
+            logging.error('URL request result: ' + transaction_data.content)
+            logging.error(str(e))
+            logging.info('Will retry later ...')
+            return 0
     else:
         url = 'https://chain.api.btc.com/v3/tx/' + tx_id + '?verbose=2'
-        transaction_data = requests.get(url).json()
-        if transaction_data['err_no'] != 0:
-            logging.error(transaction_data['err_msg'])
-            return ''
-        return transaction_data['data']['inputs'][0]['prev_addresses'][0]
+        try:
+            transaction_data = requests.get(url)
+            td_json = transaction_data.json()
+            if td_json['err_no'] != 0:
+                logging.error(td_json['err_msg'])
+                return ''
+            return td_json['data']['inputs'][0]['prev_addresses'][0]
+        except Exception as e:
+            logging.error('URL request result: ' + transaction_data.content)
+            logging.error(str(e))
+            logging.info('Will retry later ...')
+            return 0
 
 def get_latest_transaction(pubkey, TOKEN = None, chain = None):
     if TOKEN == None and chain == None:
@@ -53,24 +67,28 @@ def get_latest_transaction(pubkey, TOKEN = None, chain = None):
     if 'testnet' in chain or 'Testnet' in chain:
         url = 'https://api.blockcypher.com/v1/btc/test3/addrs/' + pubkey + "?token=" + get_bcypher_token()
         try:
-            user_data = requests.get(url).json()
-            if 'error' in user_data:
-                logging.error(user_data['error'])
+            user_data = requests.get(url)
+            ud_json = user_data.json()
+            if 'error' in ud_json:
+                logging.error(ud_json['error'])
                 return 'retry'
-            return user_data['txrefs'][0]['tx_hash']
+            return ud_json['txrefs'][0]['tx_hash']
         except Exception as e:
+            logging.error('URL request result: ' + user_data.content)
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
     else:
         url = 'https://chain.api.btc.com/v3/address/' + pubkey + '/tx'
         try:
-            user_data = requests.get(url).json()
-            if user_data['err_no'] != 0:
-                logging.error(user_data['err_msg'])
+            user_data = requests.get(url)
+            ud_json = user_data.json()
+            if ud_json['err_no'] != 0:
+                logging.error(ud_json['err_msg'])
                 return 'retry'
-            return user_data['data']['list'][0]['hash']
+            return ud_json['data']['list'][0]['hash']
         except Exception as e:
+            logging.error('URL request result: ' + user_data.content)
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
@@ -98,24 +116,28 @@ def get_confirmation(tx_id, TOKEN = None, chain = None):
     if 'testnet' in chain or 'Testnet' in chain:
         url = 'https://api.blockcypher.com/v1/btc/test3/txs/' + tx_id + '?token=' + get_bcypher_token()
         try:
-            transaction_data = requests.get(url).json()
-            if 'error' in transaction_data:
-                logging.error(transaction_data['error'])
+            transaction_data = requests.get(url)
+            td_json = transaction_data.json()
+            if 'error' in td_json:
+                logging.error(td_json['error'])
                 return 0
-            ret = transaction_data['confirmations']
+            ret = td_json['confirmations']
         except Exception as e:
+            logging.error('URL request result: ' + transaction_data.content)
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
     else:
         url = 'https://chain.api.btc.com/v3/tx/' + tx_id + '?verbose=1'
         try:
-            transaction_data = requests.get(url).json()
-            if transaction_data['err_no'] != 0:
-                logging.error(transaction_data['err_msg'])
+            transaction_data = requests.get(url)
+            td_json = transaction_data.json()
+            if td_json['err_no'] != 0:
+                logging.error(td_json['err_msg'])
                 return 0
-            ret = transaction_data['data']['confirmations']
+            ret = td_json['data']['confirmations']
         except Exception as e:
+            logging.error('URL request result: ' + transaction_data.content)
             logging.error(str(e))
             logging.info('Will retry later ...')
             return 0
