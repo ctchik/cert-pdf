@@ -190,122 +190,121 @@ def get_args(key, opts):
 
 signal.signal(signal.SIGINT, signal_handler)
 
-# Create log folder
+if __name__ == '__main__':
 
-os.makedirs(os.path.split(path_helpers.get_api_log_dir())[0], exist_ok = True)
+    # Create log folder
 
-# Handle the terminal args
+    os.makedirs(os.path.split(path_helpers.get_api_log_dir())[0], exist_ok = True)
 
-add_log('INFO', 'A calling raised - \'%s\'' % sys.argv[0])
+    # Handle the terminal args
 
-if len(sys.argv) < 2:
-    add_log('ERROR', 'Too few argument')
-    print('Too few argument')
-    exit(1)
+    add_log('INFO', 'A calling raised - \'%s\'' % sys.argv[0])
 
-if sys.argv[1] == 'issue':
-    candidates  = [
-        'import_path',
-        'export_path',
-        'pubkey',
-        'psw_file',
-        'itsc',
-        'name_pattern'
-    ]
-    
-    try:
-        opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
-    except getopt.GetoptError as e:
-        add_log('ERROR', str(e))
-        print(e)
+    if len(sys.argv) < 2:
+        add_log('ERROR', 'Too few argument')
+        print('Too few argument')
         exit(1)
 
-    args_list = [x[0] for x in opts]
-    must_list = candidates[0:4]
-
-    for x in must_list:
-        if ('--' + x) not in args_list:
-            print('ERROR - Argument \'%s\' not found' % x)
-            add_log('ERROR', 'Argument \'%s\' not found' % x)
+    if sys.argv[1] == 'issue':
+        candidates  = [
+            'import_path',
+            'export_path',
+            'pubkey',
+            'psw_file',
+            'itsc',
+            'name_pattern'
+        ]
+        
+        try:
+            opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
+        except getopt.GetoptError as e:
+            add_log('ERROR', str(e))
+            print(e)
             exit(1)
 
-    params = [
-        get_args('--import_path', opts),
-        get_args('--export_path', opts),
-        get_args('--pubkey', opts),
-        get_args('--psw_file', opts)
-    ]
+        args_list = [x[0] for x in opts]
+        must_list = candidates[0:4]
 
-    if get_args('itsc', opts):
-        params.append(get_args('itsc', opts))
-    
-    if get_args('name_pattern', opts):
-        params.append(get_args('name_pattern', opts))
+        for x in must_list:
+            if ('--' + x) not in args_list:
+                print('ERROR - Argument \'%s\' not found' % x)
+                add_log('ERROR', 'Argument \'%s\' not found' % x)
+                exit(1)
 
-    issue_batch(*params)
+        params = [
+            get_args('--import_path', opts),
+            get_args('--export_path', opts),
+            get_args('--pubkey', opts),
+            get_args('--psw_file', opts)
+        ]
 
-elif sys.argv[1] == 'extract':
-    candidates  = [
-        'cert_path',
-        'export_path'
-    ]
-    
-    try:
-        opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
-    except getopt.GetoptError as e:
-        add_log('ERROR', str(e))
-        print(e)
-        exit(1)
+        if get_args('itsc', opts):
+            params.append(get_args('itsc', opts))
+        
+        if get_args('name_pattern', opts):
+            params.append(get_args('name_pattern', opts))
 
-    args_list = [x[0] for x in opts]
-    must_list = candidates[0:2]
+        issue_batch(*params)
 
-    for x in must_list:
-        if ('--' + x) not in args_list:
-            print('ERROR - Argument \'%s\' not found' % x)
-            add_log('ERROR', 'Argument \'%s\' not found' % x)
+    elif sys.argv[1] == 'extract':
+        candidates  = [
+            'cert_path',
+            'export_path'
+        ]
+        
+        try:
+            opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
+        except getopt.GetoptError as e:
+            add_log('ERROR', str(e))
+            print(e)
             exit(1)
 
-    params = [
-        get_args('--cert_path', opts),
-        get_args('--export_path', opts)
-    ]
+        args_list = [x[0] for x in opts]
+        must_list = candidates[0:2]
 
-    extract_pdf(*params)
+        for x in must_list:
+            if ('--' + x) not in args_list:
+                print('ERROR - Argument \'%s\' not found' % x)
+                add_log('ERROR', 'Argument \'%s\' not found' % x)
+                exit(1)
 
-elif sys.argv[1] == 'verify':
-    candidates  = [
-        'cert_path',
-        'pubkey_list'
-    ]
-    
-    try:
-        opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
-    except getopt.GetoptError as e:
-        add_log('ERROR', str(e))
-        print(e)
+        params = [
+            get_args('--cert_path', opts),
+            get_args('--export_path', opts)
+        ]
 
-    args_list = [x[0] for x in opts]
-    must_list = candidates[0:2]
+        extract_pdf(*params)
 
-    for x in must_list:
-        if ('--' + x) not in args_list:
-            print('ERROR - Argument \'%s\' not found' % x)
-            add_log('ERROR', 'Argument \'%s\' not found' % x)
-            exit(1)
+    elif sys.argv[1] == 'verify':
+        candidates  = [
+            'cert_path',
+            'pubkey_list'
+        ]
+        
+        try:
+            opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
+        except getopt.GetoptError as e:
+            add_log('ERROR', str(e))
+            print(e)
 
-    params = [
-        get_args('--cert_path', opts),
-        get_args('--pubkey_list', opts).split(',')
-    ]
+        args_list = [x[0] for x in opts]
+        must_list = candidates[0:2]
 
-    verify_cert(*params)
+        for x in must_list:
+            if ('--' + x) not in args_list:
+                print('ERROR - Argument \'%s\' not found' % x)
+                add_log('ERROR', 'Argument \'%s\' not found' % x)
+                exit(1)
 
-elif sys.argv[1] == 'clean':
-    clear_cache()
+        params = [
+            get_args('--cert_path', opts),
+            get_args('--pubkey_list', opts).split(',')
+        ]
 
-else:
-    print('Unknown argument \'%s\'' % sys.argv[1])
+        verify_cert(*params)
 
-# if __name__ == '__main__':
-#     issue_batch('./PDFs', './output', pubkey_list[0], './configuration/psw_testnet.txt')
+    elif sys.argv[1] == 'clean':
+        clear_cache()
+
+    else:
+        print('Unknown argument \'%s\'' % sys.argv[1])
