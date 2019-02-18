@@ -35,6 +35,7 @@ def start(token, export_path):
     os.makedirs(get_template_dir(TOKEN), exist_ok = True)
     os.makedirs(get_roster_dir(TOKEN), exist_ok = True)
     os.makedirs(get_signed_cert_dir(TOKEN), exist_ok = True)
+    os.makedirs(get_temp_input_dir(TOKEN), exist_ok = True)
     shutil.copyfile(get_tools_conf_template_dir(), get_tools_conf_dir(TOKEN))
     shutil.copyfile(get_issuer_conf_template_dir(), get_issuer_conf_dir(TOKEN))
     shutil.copytree(get_image_template_dir(), get_image_dir(TOKEN))
@@ -49,6 +50,13 @@ def modify_conf(pubkey, psw_file):
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'unsigned_certificates_dir', get_unsigned_cert_dir(TOKEN))
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'blockchain_certificates_dir', get_signed_cert_dir(TOKEN))
        
+def transfer_input(import_path):
+    files = os.listdir(import_path)
+    with tqdm.tqdm(total = len(files)) as bar:
+        for f in files:
+            bar.update(1)
+            shutil.move(os.path.join(import_path, f), get_temp_input_dir(TOKEN))
+
 def clear(clear_all = False):
     if clear_all:
         shutil.rmtree(STAGE_DIR, ignore_errors = True)

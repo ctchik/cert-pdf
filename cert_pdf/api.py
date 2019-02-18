@@ -3,6 +3,7 @@ import sys
 import json
 import uuid
 import fcntl
+import shutil
 import base64
 import signal
 import getopt
@@ -80,7 +81,7 @@ def tmp_issue_certificates(pubkey):
 # name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
 #               PLAESE DON'T include '.pdf' in namePattern
 
-def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pattern = '|DOCID|-|NAME|'):
+def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pattern = '|DOCID|-|NAME|', clear_input = False):
 
     global TOKEN
     global JOB_LOG
@@ -99,13 +100,19 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
     JOB_LOG['total_tasks'] = 10
     JOB_LOG['state'] = ''
 
-    
     add_log('START', 'A new job is initiated by user <%s> with the job ID <%s>.\nThe state of this job can be found in file <%s>.' % (itsc, TOKEN, path_helpers.get_stage_log_dir(TOKEN)))
     insert_job_log('The job <%s> is started by user <%s>.' % (TOKEN, itsc), replace = True)
     print('\n[INFO] The job ID of this calling is ' + TOKEN)
 
     go_task(lambda: issuer_helpers.start(TOKEN, export_path), 'Creating staging folder')
     go_task(lambda: issuer_helpers.modify_conf(pubkey, psw_file), 'Modifying configuration files')
+
+    if clear_input:
+        insert_job_log('clean_input tag detected, transfering input files ...')
+        print('\n[INFO] clean_input tag detected, transfering input files ...')
+        issuer_helpers.transfer_input(import_path)
+        import_path = path_helpers.get_temp_input_dir(TOKEN)
+
     go_task(lambda: tmp_create_roster(import_path, name_pattern), 'Creating roster file')
     
     if file_count == 0:
@@ -216,7 +223,7 @@ if __name__ == '__main__':
         ]
         
         try:
-            opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates])
+            opts, args = getopt.getopt(sys.argv[2:], '', [x + '=' for x in candidates[:-1]] + ['clear_input'])
         except getopt.GetoptError as e:
             add_log('ERROR', str(e))
             print(e)
@@ -231,20 +238,23 @@ if __name__ == '__main__':
                 add_log('ERROR', 'Argument \'%s\' not found' % x)
                 exit(1)
 
-        params = [
-            get_args('--import_path', opts),
-            get_args('--export_path', opts),
-            get_args('--pubkey', opts),
-            get_args('--psw_file', opts)
-        ]
+        params = {
+            'import_path' : get_args('--import_path', opts),
+            'export_path' : get_args('--export_path', opts),
+            'pubkey' : get_args('--pubkey', opts),
+            'psw_file' : get_args('--psw_file', opts)
+        }
 
-        if get_args('itsc', opts):
-            params.append(get_args('itsc', opts))
+        if get_args('--itsc', opts):
+            params['itsc'] = get_args('--itsc', opts)
         
-        if get_args('name_pattern', opts):
-            params.append(get_args('name_pattern', opts))
+        if get_args('--name_pattern', opts):
+            params['name_pattern'] = get_args('--name_pattern', opts)
 
-        issue_batch(*params)
+        if get_args('--clear_input', opts) != None:
+            params['clear_input'] = True
+
+        issue_batch(**params)
 
     elif sys.argv[1] == 'extract':
         candidates  = [

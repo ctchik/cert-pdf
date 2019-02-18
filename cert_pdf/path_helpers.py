@@ -35,6 +35,9 @@ def get_tools_conf_template_dir():
 def get_image_template_dir():
     return os.path.join(ROOT_DIR, read_ini(INI_FILE, 'TEMPLATE', 'images_dir'))
 
+def get_temp_input_dir(token):
+    return os.path.join(STAGE_DIR, token, 'input')
+
 def get_image_dir(token):
     return os.path.join(STAGE_DIR, token, 'images')
 
