@@ -86,6 +86,7 @@ python api.py issue --import_path IMPORT_PATH
                     --psw_file PSW_FILE
                     [--itsc ITSC]
                     [--name_pattern NAME_PATTERN]
+                    [--clear_input]
 
 Args that is enclosed by [] is optional.
 
@@ -108,6 +109,9 @@ Argument details:
 
 --name_pattern NAME_PATTERN
       the formation of filename where |NAME| and |DOCID| are wildcards to match the corresponding info. PLAESE DON'T include '.pdf' in name_pattern. (default: '|DOCID|-|NAME|')
+      
+--clear_input
+      if this tag is typed, the script will clean up the import directory upon execution
 ```
 
 ### Extract the PDF file inside a certificate
