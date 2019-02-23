@@ -168,4 +168,4 @@ python api.py clean
 
 Thank [Blockcerts](https://github.com/blockchain-certificates) for providing the core components `cert-tools`, `cert-issuer` and `cert-verifier` of this project
 
-Information of transaction is provided by APIs of [btc.com](btc.com) (Bitcoin Mainnet) and [blockcypher.com](blockcypher.com) (Bitcoin Testnet).
+Information of transaction is provided by API [blockcypher.com](blockcypher.com).
