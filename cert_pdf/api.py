@@ -19,7 +19,7 @@ pubkey_list = ['mubib9QNSNfBZkphQb3cCXG6giGKzA9k3X']
 
 def generate_token():
     return str(uuid.uuid4())
-    
+
 def add_log(title, str):
     file = open(path_helpers.get_api_log_dir(), 'a')
     fcntl.flock(file.fileno(), fcntl.LOCK_EX)

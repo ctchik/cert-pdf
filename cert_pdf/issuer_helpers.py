@@ -104,8 +104,14 @@ def create_roster(import_path, name_pattern):
             rm = re.compile(reg)
             res = rm.match(pr)
             if res:
-                list_NAME.append(res.group('NAME') + '.pdf') # now only support PDF file, so hardcoded
-                list_DOCID.append(res.group('DOCID'))
+                if 'NAME' in res.groups():
+                    list_NAME.append(res.group('NAME') + '.pdf') # now only support PDF file, so hardcoded
+                else:
+                    list_NAME.append('')
+                if 'DOCID' in res.groups():
+                    list_DOCID.append(res.group('DOCID'))
+                else:
+                    list_DOCID.append('')
                 list_FILENAME.append(pr)
                 list_PDFinfo.append(getBase64(filename))
                 count = count + 1
