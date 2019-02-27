@@ -7,6 +7,14 @@ from btc_api_helpers import *
 # FUNCTION check_confirmation_and_issuer - Check whether the transaction is confirmed 
 #                                          and whether the cert is issued by issuer in pubkey_list
 
+def get_txid(cert_path):
+
+    with open(cert_path) as f:
+        data = json.load(f)
+        tx_id = data['signature']['anchors'][0]['sourceId']
+    
+    return tx_id
+
 def check_confirmation_and_issuer(cert_path, pubkey_list):
     
     ret = dict()

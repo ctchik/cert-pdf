@@ -167,6 +167,20 @@ def verify_cert(cert_path, pubkey_list):
 
     return result
 
+def verify_cert_for_web(cert_path):
+
+    result = []
+
+    ret = verify_helpers.cert_verify(cert_path)
+
+    result.append({'tx_id': verify_helpers.get_txid(cert_path)})
+
+    for x in ret.keys():
+        result.append({'name' : x, 'passed' : ret[x]})
+        print('%27s' % x + ' - ' + str(ret[x]))
+
+    return result
+
 # FUNCTION extract_pdf - Extract the PDF file inside the cert json file
 
 def extract_pdf(cert_path, export_path):
