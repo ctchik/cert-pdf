@@ -43,6 +43,7 @@ def start(token, export_path):
 def modify_conf(pubkey, psw_file):
     psw_file = os.path.abspath(psw_file)
     modify_ini(get_tools_conf_dir(TOKEN), 'TEMPLATE', 'data_dir', get_conf_dir(TOKEN))
+    modify_ini(get_tools_conf_dir(TOKEN), 'ISSUER', 'issuer_public_key', 'ecdsa-koblitz-pubkey:' + pubkey)
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'usb_name', os.path.split(psw_file)[0])
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'key_file', os.path.split(psw_file)[1])
     modify_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'issuing_address', pubkey)
