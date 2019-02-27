@@ -78,10 +78,10 @@ def tmp_issue_certificates(pubkey):
 # pubkey - the public key (bitcoin address) used for this issuing
 # psw_file - the location of the file where the private key is stored
 # itsc - the itsc account of the user who raises this issuing
-# name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
-#               PLAESE DON'T include '.pdf' in namePattern
+# name_pattern - the format of filename. |NAME|, |DOCID|, |*| are wildcards to match the corresponding info
+#                PLAESE DON'T include '.pdf' in namePattern
 
-def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pattern = '|DOCID|-|NAME|', clear_input = False):
+def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pattern = '|NAME|', clear_input = False):
 
     global TOKEN
     global JOB_LOG

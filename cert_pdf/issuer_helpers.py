@@ -86,7 +86,7 @@ def write_roster(list_NAME, list_DOCID, list_FILENAME, list_PDFinfo, export_file
 
 def create_roster(import_path, name_pattern):
     re_DOCID = '(?P<DOCID>[0-9a-zA-Z]+)'
-    re_NAME = '(?P<NAME>[a-zA-Z ]+)'
+    re_NAME = '(?P<NAME>[\s\S]*)'
     reg = name_pattern.replace('|DOCID|', re_DOCID).replace('|NAME|', re_NAME)
 
     list_NAME = []
