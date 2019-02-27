@@ -180,6 +180,6 @@ def request_sleep(TOKEN = None, chain = None):
         chain = read_ini(get_issuer_conf_dir(TOKEN), 'ISSUERINFO', 'chain')
     
     if 'testnet' in chain or 'Testnet' in chain:
-        time.sleep(60)
+        time.sleep(TESTNET_INTERVAL)
     else:
-        time.sleep(60)
+        time.sleep(MAINNET_INTERVAL)
