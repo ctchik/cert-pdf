@@ -25,9 +25,9 @@ from cert_tools import instantiate_v2_certificate_batch as ist
 from cert_issuer import issue_certificates as isu
 from cert_issuer import config
 
-def start(token, export_path):
-    global TOKEN
-    TOKEN = token
+from vars import *
+
+def start(export_path):
     os.makedirs(export_path, exist_ok = True)
     os.makedirs(get_summary_dir(), exist_ok = True)
     os.makedirs(get_work_dir(TOKEN), exist_ok = True)

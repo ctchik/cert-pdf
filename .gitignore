@@ -97,3 +97,7 @@ venv*/
 .DS_Store
 
 *.pdf
+passwd.txt
+sample.json
+test.json
+output/abx-xsd.json
