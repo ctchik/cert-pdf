@@ -128,10 +128,8 @@ def get_confirmation(tx_id, TOKEN = None, chain = None):
     else:
         url = 'https://api.blockcypher.com/v1/btc/main/txs/' + tx_id + '?token=' + get_bcypher_token()
         
-    print(url)
     try:
         transaction_data = requests.get(url)
-        print(transaction_data)
         td_json = transaction_data.json()
         if 'error' in td_json:
             logging.error(td_json['error'])
