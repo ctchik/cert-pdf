@@ -22,17 +22,15 @@ from log import *
 # pubkey - the public key (bitcoin address) used for this issuing
 # psw_file - the location of the file where the private key is stored
 # itsc - the itsc account of the user who raises this issuing
-# name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
-#                PLAESE DON'T include '.pdf' in namePattern
 
-def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pattern = '|NAME|', clear_input = False):
+def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, clear_input = False):
 
     class temp_var:
         file_count = 0
         issue_ret = ['', '']
 
-    def tmp_create_roster(import_path, name_pattern):
-        temp_var.file_count = issuer_helpers.create_roster(import_path, name_pattern)
+    def tmp_create_roster(import_path):
+        temp_var.file_count = issuer_helpers.create_roster(import_path)
 
     def tmp_issue_certificates(pubkey):
         temp_var.issue_ret = issuer_helpers.issue_certificates(pubkey)
@@ -81,10 +79,10 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
         issuer_helpers.transfer_input(import_path)
         import_path = path_helpers.get_temp_input_dir(TOKEN)
 
-    go_task(lambda: tmp_create_roster(import_path, name_pattern), 'Creating roster file')
+    go_task(lambda: tmp_create_roster(import_path), 'Creating roster file')
 
     if temp_var.file_count == 0:
-        print('\n[INFO] There is no valid PDF file found, the process will terminate.\n')
+        print('\n[INFO] There is no valid PDF / HTML file found, the process will terminate.\n')
         add_log('ERROR', 'The job <%s> failed. Because there is no valid PDF file found.' % TOKEN)
         insert_job_log('There is no valid PDF file found, the process will terminate.')
         insert_job_log('Job failed.', replace = True)
@@ -200,8 +198,7 @@ if __name__ == '__main__':
             'export_path',
             'pubkey',
             'psw_file',
-            'itsc',
-            'name_pattern'
+            'itsc'
         ]
         
         try:
@@ -229,9 +226,6 @@ if __name__ == '__main__':
 
         if get_args('--itsc', opts):
             params['itsc'] = get_args('--itsc', opts)
-        
-        if get_args('--name_pattern', opts):
-            params['name_pattern'] = get_args('--name_pattern', opts)
 
         if get_args('--clear_input', opts) != None:
             params['clear_input'] = True
