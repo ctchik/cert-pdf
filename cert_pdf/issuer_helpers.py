@@ -220,7 +220,7 @@ def generate_summary(export_path):
                 usr['issued_time'] = issuedtime
                 origin_filename, _ = os.path.splitext(data['filename'])
                 output[identity] = usr
-            shutil.copy(filename, os.path.join(export_path, origin_filename + '@' + id.replace('urn:uuid:', '') + '.json'))
+            shutil.copy(filename, os.path.join(export_path, origin_filename + id.replace('urn:uuid:', '') + '.json'))
             bar.update(1)
         with open(get_summary_file_dir(TOKEN), 'w') as f:
             json.dump(output, f, indent = 4)
