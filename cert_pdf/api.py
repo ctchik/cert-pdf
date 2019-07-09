@@ -1,7 +1,6 @@
 import os
 import sys
 import json
-import uuid
 import fcntl
 import shutil
 import base64
@@ -13,63 +12,8 @@ import issuer_helpers
 import verify_helpers
 import path_helpers
 
-# Test public key
-
-pubkey_list = ['mubib9QNSNfBZkphQb3cCXG6giGKzA9k3X']
-
-def generate_token():
-    return str(uuid.uuid4())
-
-def add_log(title, str):
-    file = open(path_helpers.get_api_log_dir(), 'a')
-    fcntl.flock(file.fileno(), fcntl.LOCK_EX)
-    print('[%s] [%s] %s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), title, str), file = file)
-    file.close()
-
-def insert_job_log(str, inc = False, replace = False):
-    if replace:
-        JOB_LOG['state'] = str
-    if inc:
-        JOB_LOG['current_task'] += 1
-    file_json = open(path_helpers.get_stage_json_dir(TOKEN), 'w')
-    json.dump(JOB_LOG, file_json, indent = 4)
-
-    file_json.close()
-    file_log = open(path_helpers.get_stage_log_dir(TOKEN), 'a')
-    print('[%s] %s' % (datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S'), str), file = file_log)
-    file_log.close()
-
-def go_task(f, msg_str, print_suc = True):
-    try:
-        print('\n[INFO] %s ...' % msg_str)
-        insert_job_log('%s ...' % msg_str, inc = True, replace = True)
-        f()
-    except Exception as e:
-        print('\n[INFO] Failed. Error message: %s.' % str(e))
-        add_log('ERROR', 'The job <%s> failed. Please see log file <%s> for details.' % (TOKEN, path_helpers.get_stage_log_dir(TOKEN)))
-        insert_job_log('Failed. Error message: %s.' % str(e))
-        insert_job_log('Job failed.', replace = True)
-        insert_job_log('Cleaning all cache files ...')
-        issuer_helpers.clear()
-        exit(1)
-    else:
-        if print_suc:
-            insert_job_log('Succeed.')
-
-def tmp_create_roster(import_path, name_pattern):
-    global file_count
-    file_count = issuer_helpers.create_roster(import_path, name_pattern)
-
-def tmp_issue_certificates(pubkey):
-    global issue_ret
-    issue_ret = issuer_helpers.issue_certificates(pubkey)
-    if not issue_ret[1]:
-        print('\n[INFO] Failed. Please see log file <%s> for details.' % path_helpers.get_stage_log_dir(TOKEN))
-        add_log('ERROR', 'The job <%s> failed. Please see log file <%s> for details.' % (TOKEN, path_helpers.get_stage_log_dir(TOKEN)))
-        insert_job_log('Job failed.', replace = True)
-        insert_job_log('Cleaning all cache files ...')
-        issuer_helpers.clear()
-        exit(1)
+from vars import *
+from log import *
 
 # FUNCTION issue_batch - Load a set of PDF files and finally deploy them on the blockchain
 #
@@ -78,20 +22,42 @@ def tmp_issue_certificates(pubkey):
 # pubkey - the public key (bitcoin address) used for this issuing
 # psw_file - the location of the file where the private key is stored
 # itsc - the itsc account of the user who raises this issuing
-# name_pattern - the format of filename. |NAME|, |DOCID| are wildcards to match the corresponding info
-#                PLAESE DON'T include '.pdf' in namePattern
 
-def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pattern = '|NAME|', clear_input = False):
+def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, clear_input = False):
 
-    global TOKEN
-    global JOB_LOG
-    global file_count
-    global issue_ret
+    class temp_var:
+        file_count = 0
+        issue_ret = ['', '']
 
-    TOKEN = generate_token()
-    JOB_LOG = dict()
-    file_count = 0
-    issue_ret = ['', '']
+    def tmp_create_roster(import_path):
+        temp_var.file_count = issuer_helpers.create_roster(import_path)
+
+    def tmp_issue_certificates(pubkey):
+        temp_var.issue_ret = issuer_helpers.issue_certificates(pubkey)
+        if not temp_var.issue_ret[1]:
+            print('\n[INFO] Failed. Please see log file <%s> for details.' % path_helpers.get_stage_log_dir(TOKEN))
+            add_log('ERROR', 'The job <%s> failed. Please see log file <%s> for details.' % (TOKEN, path_helpers.get_stage_log_dir(TOKEN)))
+            insert_job_log('Job failed.', replace = True)
+            insert_job_log('Cleaning all cache files ...')
+            issuer_helpers.clear()
+            exit(1)
+
+    def go_task(func, msg_str, print_suc = True):
+        try:
+            print('\n[INFO] %s ...' % msg_str)
+            insert_job_log('%s ...' % msg_str, inc = True, replace = True)
+            func()
+        except Exception as e:
+            print('\n[INFO] Failed. Error message: %s.' % str(e))
+            add_log('ERROR', 'The job <%s> failed. Please see log file <%s> for details.' % (TOKEN, path_helpers.get_stage_log_dir(TOKEN)))
+            insert_job_log('Failed. Error message: %s.' % str(e))
+            insert_job_log('Job failed.', replace = True)
+            insert_job_log('Cleaning all cache files ...')
+            issuer_helpers.clear()
+            exit(1)
+        else:
+            if print_suc:
+                insert_job_log('Succeed.')
 
     os.makedirs(os.path.split(path_helpers.get_stage_log_dir(TOKEN))[0], exist_ok = True)
 
@@ -104,7 +70,7 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
     insert_job_log('The job <%s> is started by user <%s>.' % (TOKEN, itsc), replace = True)
     print('\n[INFO] The job ID of this calling is ' + TOKEN)
 
-    go_task(lambda: issuer_helpers.start(TOKEN, export_path), 'Creating staging folder')
+    go_task(lambda: issuer_helpers.start(export_path), 'Creating staging folder')
     go_task(lambda: issuer_helpers.modify_conf(pubkey, psw_file), 'Modifying configuration files')
 
     if clear_input:
@@ -113,10 +79,10 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
         issuer_helpers.transfer_input(import_path)
         import_path = path_helpers.get_temp_input_dir(TOKEN)
 
-    go_task(lambda: tmp_create_roster(import_path, name_pattern), 'Creating roster file')
-    
-    if file_count == 0:
-        print('\n[INFO] There is no valid PDF file found, the process will terminate.\n')
+    go_task(lambda: tmp_create_roster(import_path), 'Creating roster file')
+
+    if temp_var.file_count == 0:
+        print('\n[INFO] There is no valid PDF / HTML file found, the process will terminate.\n')
         add_log('ERROR', 'The job <%s> failed. Because there is no valid PDF file found.' % TOKEN)
         insert_job_log('There is no valid PDF file found, the process will terminate.')
         insert_job_log('Job failed.', replace = True)
@@ -127,10 +93,10 @@ def issue_batch(import_path, export_path, pubkey, psw_file, itsc = None, name_pa
     go_task(lambda: issuer_helpers.create_template(), 'Creating certificate templates')
     go_task(lambda: issuer_helpers.create_certificates(), 'Instantiating certificates')
     go_task(lambda: tmp_issue_certificates(pubkey), 'Issuing certificates')
-    go_task(lambda: issuer_helpers.wait(issue_ret[0], issue_ret[2]), 'Waiting the transaction to be confirmed')
+    go_task(lambda: issuer_helpers.wait(temp_var.issue_ret[0], temp_var.issue_ret[2]), 'Waiting the transaction to be confirmed')
     go_task(lambda: issuer_helpers.generate_summary(export_path), 'Generating summary file and moving issued certs into the destination folder')
     go_task(lambda: issuer_helpers.clear(), 'Cleaning working directory')
-    
+
     insert_job_log('Job accomplished.', inc = True, replace = True)
     print('\n[INFO] All steps finished.\n')
     add_log('SUCCESS', 'The job <%s> succeed. Please go to <%s> to find the export files.' % (TOKEN, export_path))     
@@ -203,15 +169,15 @@ def signal_handler(signal, frame):
     insert_job_log('Job failed.', replace = True)
     sys.exit(0)
 
-def get_args(key, opts):
-    for x, y in opts:
-        if x == key:
-            return y
-    return None
-
 signal.signal(signal.SIGINT, signal_handler)
 
 if __name__ == '__main__':
+
+    def get_args(key, opts):
+        for x, y in opts:
+            if x == key:
+                return y
+        return None
 
     # Create log folder
 
@@ -232,8 +198,7 @@ if __name__ == '__main__':
             'export_path',
             'pubkey',
             'psw_file',
-            'itsc',
-            'name_pattern'
+            'itsc'
         ]
         
         try:
@@ -261,9 +226,6 @@ if __name__ == '__main__':
 
         if get_args('--itsc', opts):
             params['itsc'] = get_args('--itsc', opts)
-        
-        if get_args('--name_pattern', opts):
-            params['name_pattern'] = get_args('--name_pattern', opts)
 
         if get_args('--clear_input', opts) != None:
             params['clear_input'] = True

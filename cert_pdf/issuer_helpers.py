@@ -25,9 +25,9 @@ from cert_tools import instantiate_v2_certificate_batch as ist
 from cert_issuer import issue_certificates as isu
 from cert_issuer import config
 
-def start(token, export_path):
-    global TOKEN
-    TOKEN = token
+from vars import *
+
+def start(export_path):
     os.makedirs(export_path, exist_ok = True)
     os.makedirs(get_summary_dir(), exist_ok = True)
     os.makedirs(get_work_dir(TOKEN), exist_ok = True)
@@ -70,54 +70,40 @@ def getBase64(filename):
     file_encode = base64.encodebytes(file_read).decode('utf-8')
     return file_encode
     
-def write_roster(list_NAME, list_DOCID, list_FILENAME, list_PDFinfo, export_file):
-    headers = ['name', 'pubkey', 'identity', 'filename', 'pdfinfo']
+def write_roster(list_FILENAME, list_FILECONTENT, export_file):
+    headers = ['pubkey', 'name', 'identity', 'filename', 'filecontent']
     csvfile = open(export_file, 'w')
     writer = csv.DictWriter(csvfile, headers)
     writer.writeheader()
     
-    with tqdm.tqdm(total = len(list_NAME)) as bar:
-        for i in range(0, len(list_NAME)):
-            writer.writerow({'name' : list_NAME[i],
-                             'pubkey': 'ecdsa-koblitz-pubkey:' + str(hashlib.sha256(b'dummy').hexdigest()),
-                             'identity' : list_DOCID[i],
+    with tqdm.tqdm(total = len(list_FILENAME)) as bar:
+        for i in range(0, len(list_FILENAME)):
+            writer.writerow({'pubkey': 'ecdsa-koblitz-pubkey:' + str(hashlib.sha256(b'dummy').hexdigest()),
+                             'name': list_FILENAME[i][:11],
+                             'identity': '',
                              'filename' : list_FILENAME[i],
-                             'pdfinfo' : list_PDFinfo[i]})
+                             'filecontent' : list_FILECONTENT[i]})
             bar.update(1)
 
-def create_roster(import_path, name_pattern):
-    re_DOCID = '(?P<DOCID>[0-9a-zA-Z]+)'
-    re_NAME = '(?P<NAME>[\s\S]*)'
-    reg = name_pattern.replace('|DOCID|', re_DOCID).replace('|NAME|', re_NAME)
+def create_roster(import_path):
+    extension_list = ['.pdf', '.htm', '.html']
 
-    list_NAME = []
-    list_DOCID = []
     list_FILENAME = []
-    list_PDFinfo = []
+    list_FILECONTENT = []
     count = 0
 
-    with tqdm.tqdm(total = len(glob.glob(os.path.join(import_path, '*.pdf')))) as bar:
-        for filename in glob.glob(os.path.join(import_path, '*.pdf')):
-            pr = os.path.split(filename)[1]
-            if '.pdf' in pr:
-                pr = pr.replace('.pdf', '')
-            rm = re.compile(reg)
-            res = rm.match(pr)
-            if res:
-                if 'NAME' in res.groupdict():
-                    list_NAME.append(res.group('NAME') + '.pdf') # now only support PDF file, so hardcoded
-                else:
-                    list_NAME.append('')
-                if 'DOCID' in res.groupdict():
-                    list_DOCID.append(res.group('DOCID'))
-                else:
-                    list_DOCID.append('')
-                list_FILENAME.append(pr)
-                list_PDFinfo.append(getBase64(filename))
-                count = count + 1
+    with tqdm.tqdm(total = len(glob.glob(os.path.join(import_path, '*.*')))) as bar:
+        for filename in glob.glob(os.path.join(import_path, '*.*')):
+            pr_name = os.path.split(filename)[1]
+            pr, ext = os.path.splitext(pr_name)
+            if ext not in extension_list:
+                continue
+            list_FILENAME.append(pr_name)
+            list_FILECONTENT.append(getBase64(filename))
+            count = count + 1
             bar.update(1)
 
-    write_roster(list_NAME, list_DOCID, list_FILENAME, list_PDFinfo, get_roster_file_dir(TOKEN))
+    write_roster(list_FILENAME, list_FILECONTENT, get_roster_file_dir(TOKEN))
 
     return count
 
@@ -232,9 +218,9 @@ def generate_summary(export_path):
                 usr = dict()
                 usr['cert_id'] = id
                 usr['issued_time'] = issuedtime
-                origin_filename = data['filename']
+                origin_filename, _ = os.path.splitext(data['filename'])
                 output[identity] = usr
-            shutil.copy(filename, os.path.join(export_path, origin_filename + '.json'))
+            shutil.copy(filename, os.path.join(export_path, origin_filename + id.replace('urn:uuid:', '') + '.json'))
             bar.update(1)
         with open(get_summary_file_dir(TOKEN), 'w') as f:
             json.dump(output, f, indent = 4)

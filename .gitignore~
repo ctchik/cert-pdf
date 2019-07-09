@@ -101,5 +101,5 @@ passwd.txt
 sample.json
 test.json
 output/abx-xsd.json
-output/*
-input/*
+output
+input
